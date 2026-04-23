@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow – Organize Your Day, Own Your Year</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a2e;
+      --paper: #f8f6f1;
+      --accent: #e8572a;
+      --accent2: #2d6a4f;
+      --sky: #3a86ff;
+      --muted: #8a8a9a;
+      --card-bg: #ffffff;
+      --border: #e0ddd6;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(248,246,241,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 900;
+      color: var(--ink); text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      font-size: 14px; font-weight: 500;
+      color: var(--muted); text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta {
+      background: var(--ink) !important;
+      color: var(--paper) !important;
+      padding: 10px 22px;
+      border-radius: 6px;
+      font-weight: 600 !important;
+      transition: background .2s !important;
+    }
+    .nav-cta:hover { background: var(--accent) !important; color: #fff !important; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 120px 48px 80px;
+      gap: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,87,42,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -100px; left: -100px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45,106,79,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-text { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(232,87,42,0.08);
+      padding: 6px 14px; border-radius: 4px;
+      margin-bottom: 28px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(48px, 6vw, 80px);
+      font-weight: 900;
+      line-height: 1.02;
+      letter-spacing: -2px;
+      color: var(--ink);
+      margin-bottom: 28px;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .hero-subtitle {
+      font-size: 18px; font-weight: 300; line-height: 1.7;
+      color: var(--muted);
+      max-width: 440px;
+      margin-bottom: 44px;
+    }
+    .hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 16px 36px;
+      border-radius: 8px;
+      font-size: 15px; font-weight: 600;
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(232,87,42,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(232,87,42,0.4); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--ink); font-size: 15px; font-weight: 500;
+      text-decoration: none;
+      transition: gap .2s;
+    }
+    .btn-secondary:hover { gap: 12px; }
+
+    /* App Preview */
+    .hero-preview {
+      position: relative; z-index: 1;
+      animation: floatUp .8s ease-out both;
+    }
+    @keyframes floatUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .preview-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 24px 80px rgba(26,26,46,0.15);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .preview-bar {
+      background: var(--ink);
+      padding: 14px 20px;
+      display: flex; gap: 8px; align-items: center;
+    }
+    .preview-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .preview-dot:nth-child(1) { background: #ff5f56; }
+    .preview-dot:nth-child(2) { background: #febc2e; }
+    .preview-dot:nth-child(3) { background: #27c93f; }
+    .preview-bar-title {
+      flex: 1; text-align: center;
+      font-size: 12px; color: rgba(255,255,255,0.5);
+      font-weight: 500;
+    }
+    .preview-body { padding: 28px; }
+    .preview-header-area { text-align: center; margin-bottom: 24px; }
+    .preview-app-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; font-weight: 900; color: var(--ink);
+    }
+    .preview-app-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .preview-tabs {
+      display: flex; gap: 6px; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .preview-tab {
+      padding: 7px 14px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      border: 1.5px solid #3498db;
+      color: #3498db; background: transparent;
+    }
+    .preview-tab.active { background: #3498db; color: white; }
+    .preview-cal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .preview-cal-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .preview-cal-nav { display: flex; gap: 6px; }
+    .preview-cal-nav span {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #f0f0f0; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--muted); cursor: pointer;
+    }
+    .preview-cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 3px; margin-bottom: 16px;
+    }
+    .pcg-day {
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; border-radius: 50%;
+    }
+    .pcg-day.head { font-weight: 700; color: var(--muted); font-size: 9px; }
+    .pcg-day.today { background: var(--accent); color: white; font-weight: 700; }
+    .pcg-day.has-task { background: rgba(52,152,219,0.12); color: #2980b9; font-weight: 600; }
+    .pcg-day.other { color: #ccc; }
+    .preview-tasks { display: flex; flex-direction: column; gap: 8px; }
+    .preview-task {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; background: #f8f8f8; border-radius: 6px;
+    }
+    .preview-task-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #27ae60; flex-shrink: 0;
+    }
+    .preview-task-dot.done { background: #27ae60; }
+    .preview-task-text { font-size: 12px; color: var(--ink); flex: 1; }
+    .preview-task-text.done { text-decoration: line-through; color: var(--muted); }
+    .preview-gcal-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(66,133,244,0.08);
+      color: #4285f4;
+      font-size: 10px; font-weight: 600;
+      padding: 4px 10px; border-radius: 4px;
+      margin-top: 14px;
+      border: 1px solid rgba(66,133,244,0.2);
+    }
+    .gcal-icon { font-size: 13px; }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 100px 48px;
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .features-label {
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 16px;
+    }
+    .features-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 64px;
+      max-width: 500px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2px;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.04);
+      padding: 36px 32px;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: background .2s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background .3s;
+    }
+    .feature-card:hover { background: rgba(255,255,255,0.07); }
+    .feature-card:hover::before { background: var(--accent); }
+    .feature-icon {
+      font-size: 28px; margin-bottom: 20px;
+      display: block;
+    }
+    .feature-name {
+      font-size: 18px; font-weight: 600;
+      margin-bottom: 12px;
+      color: white;
+    }
+    .feature-desc {
+      font-size: 14px; line-height: 1.7;
+      color: rgba(248,246,241,0.55);
+      font-weight: 300;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how {
+      padding: 100px 48px;
+      max-width: 900px; margin: 0 auto;
+    }
+    .how-label {
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 16px;
+    }
+    .how-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 64px;
+    }
+    .how-steps { display: flex; flex-direction: column; gap: 0; }
+    .how-step {
+      display: grid; grid-template-columns: 80px 1fr;
+      gap: 32px; padding: 40px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .how-step:last-child { border-bottom: none; }
+    .step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 56px; font-weight: 900;
+      color: var(--border); line-height: 1;
+      transition: color .3s;
+    }
+    .how-step:hover .step-num { color: var(--accent); }
+    .step-content {}
+    .step-title { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+    .step-desc { font-size: 15px; line-height: 1.7; color: var(--muted); font-weight: 300; }
+
+    /* ── GCAL SECTION ── */
+    .gcal-section {
+      padding: 100px 48px;
+      background: linear-gradient(135deg, #f0f7ff 0%, #f8f6f1 100%);
+    }
+    .gcal-inner {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+    }
+    .gcal-label {
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #4285f4; margin-bottom: 16px;
+    }
+    .gcal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+    .gcal-desc { font-size: 16px; line-height: 1.7; color: var(--muted); font-weight: 300; margin-bottom: 32px; }
+    .gcal-bullets { display: flex; flex-direction: column; gap: 14px; }
+    .gcal-bullet { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 400; }
+    .gcal-bullet::before { content: '✓'; color: #4285f4; font-weight: 700; font-size: 14px; }
+
+    .gcal-visual {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 16px 60px rgba(26,26,46,0.1);
+      border: 1px solid var(--border);
+    }
+    .gcal-visual-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+    }
+    .gcal-logo { width: 32px; height: 32px; }
+    .gcal-visual-title { font-weight: 700; font-size: 16px; color: var(--ink); }
+    .gcal-event-list { display: flex; flex-direction: column; gap: 10px; }
+    .gcal-event {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border-left: 3px solid;
+    }
+    .gcal-event.blue { background: rgba(66,133,244,0.08); border-color: #4285f4; }
+    .gcal-event.green { background: rgba(52,168,83,0.08); border-color: #34a853; }
+    .gcal-event.red { background: rgba(234,67,53,0.08); border-color: #ea4335; }
+    .gcal-event.yellow { background: rgba(251,188,4,0.08); border-color: #fbbc04; }
+    .gcal-event-time { font-size: 11px; color: var(--muted); font-weight: 500; min-width: 50px; }
+    .gcal-event-name { font-size: 13px; font-weight: 500; color: var(--ink); flex: 1; }
+    .gcal-sync-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; margin-top: 18px;
+      padding: 12px;
+      background: #4285f4;
+      color: white; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none;
+      transition: background .2s;
+    }
+    .gcal-sync-btn:hover { background: #3367d6; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 100px 48px;
+      text-align: center;
+      background: var(--paper);
+    }
+    .cta-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 900; letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+    .cta-title em { font-style: italic; color: var(--accent); }
+    .cta-sub { font-size: 18px; color: var(--muted); font-weight: 300; margin-bottom: 44px; }
+    .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-outline {
+      display: inline-block;
+      border: 2px solid var(--ink);
+      color: var(--ink); padding: 15px 35px;
+      border-radius: 8px;
+      font-size: 15px; font-weight: 600;
+      text-decoration: none;
+      transition: all .2s;
+    }
+    .btn-outline:hover { background: var(--ink); color: white; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 48px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 900; color: var(--ink);
+      text-decoration: none;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-note { font-size: 13px; color: var(--muted); font-style: italic; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 800px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 100px 24px 60px; gap: 40px; }
+      .features { padding: 70px 24px; }
+      .how { padding: 70px 24px; }
+      .gcal-section { padding: 70px 24px; }
+      .gcal-inner { grid-template-columns: 1fr; gap: 40px; }
+      .cta-section { padding: 70px 24px; }
+      footer { padding: 30px 24px; }
+    }
+
+    /* Entrance animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-eyebrow { animation: fadeUp .5s ease both; }
+    .hero-title { animation: fadeUp .6s .1s ease both; }
+    .hero-subtitle { animation: fadeUp .6s .2s ease both; }
+    .hero-actions { animation: fadeUp .6s .3s ease both; }
+    .hero-preview { animation: fadeUp .7s .4s ease both; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">Task<span>Flow</span></a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#calendar">Calendar sync</a>
+      <a href="To_Do.html" class="nav-cta">Open App →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">✦ Free productivity tool</div>
+      <h1 class="hero-title">
+        Plan today.<br>
+        <em>Own</em> the year.
+      </h1>
+      <p class="hero-subtitle">
+        TaskFlow combines daily tasks, monthly goals, annual milestones, and Google Calendar — all in one clean, distraction-free space.
+      </p>
+      <div class="hero-actions">
+        <a href="To_Do.html" class="btn-primary">Start for free</a>
+        <a href="#features" class="btn-secondary">See features →</a>
+      </div>
+    </div>
+
+    <div class="hero-preview">
+      <div class="preview-card">
+        <div class="preview-bar">
+          <div class="preview-dot"></div>
+          <div class="preview-dot"></div>
+          <div class="preview-dot"></div>
+          <div class="preview-bar-title">taskflow — app</div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-header-area">
+            <div class="preview-app-title">TaskFlow</div>
+            <div class="preview-app-sub">Your Simple To-Do App</div>
+          </div>
+          <div class="preview-tabs">
+            <div class="preview-tab">Daily Tasks</div>
+            <div class="preview-tab active">Calendar</div>
+            <div class="preview-tab">Goals</div>
+          </div>
+          <div class="preview-cal-header">
+            <div class="preview-cal-title">March 2026</div>
+            <div class="preview-cal-nav">
+              <span>‹</span><span>›</span>
+            </div>
+          </div>
+          <div class="preview-cal-grid">
+            <div class="pcg-day head">S</div><div class="pcg-day head">M</div><div class="pcg-day head">T</div><div class="pcg-day head">W</div><div class="pcg-day head">T</div><div class="pcg-day head">F</div><div class="pcg-day head">S</div>
+            <div class="pcg-day other">23</div><div class="pcg-day other">24</div><div class="pcg-day other">25</div><div class="pcg-day other">26</div><div class="pcg-day other">27</div><div class="pcg-day other">28</div><div class="pcg-day">1</div>
+            <div class="pcg-day">2</div><div class="pcg-day has-task">3</div><div class="pcg-day">4</div><div class="pcg-day has-task">5</div><div class="pcg-day">6</div><div class="pcg-day">7</div><div class="pcg-day">8</div>
+            <div class="pcg-day">9</div><div class="pcg-day">10</div><div class="pcg-day has-task">11</div><div class="pcg-day">12</div><div class="pcg-day">13</div><div class="pcg-day">14</div><div class="pcg-day">15</div>
+            <div class="pcg-day">16</div><div class="pcg-day">17</div><div class="pcg-day">18</div><div class="pcg-day">19</div><div class="pcg-day">20</div><div class="pcg-day">21</div><div class="pcg-day">22</div>
+            <div class="pcg-day today">24</div><div class="pcg-day">25</div><div class="pcg-day">26</div><div class="pcg-day">27</div><div class="pcg-day">28</div><div class="pcg-day">29</div><div class="pcg-day">30</div>
+          </div>
+          <div class="preview-tasks">
+            <div class="preview-task">
+              <div class="preview-task-dot done"></div>
+              <div class="preview-task-text done">Morning standup</div>
+            </div>
+            <div class="preview-task">
+              <div class="preview-task-dot"></div>
+              <div class="preview-task-text">Review Q2 targets</div>
+            </div>
+          </div>
+          <div class="preview-gcal-badge">
+            <span class="gcal-icon">📅</span> Synced with Google Calendar
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="features-label">What's inside</div>
+      <h2 class="features-title">Everything you need. Nothing you don't.</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">☀️</span>
+          <div class="feature-name">Daily Task Tracker</div>
+          <div class="feature-desc">Navigate day by day, add and check off tasks. Your progress is saved automatically with no account needed.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">📅</span>
+          <div class="feature-name">Calendar View</div>
+          <div class="feature-desc">Full month-grid calendar showing which days have tasks. Click any date to jump straight to it and see what's planned.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <div class="feature-name">Monthly Goals</div>
+          <div class="feature-desc">Set and track up to a month's worth of bigger-picture goals. Navigate months and watch your progress bar fill up.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🏔️</span>
+          <div class="feature-name">Annual Goals</div>
+          <div class="feature-desc">Dream big. Define your year-defining milestones and track them across all 12 months in one dedicated view.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🔗</span>
+          <div class="feature-name">Google Calendar Sync</div>
+          <div class="feature-desc">Connect your Google Calendar with one click. Your events appear right alongside your tasks in the calendar view.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">💾</span>
+          <div class="feature-name">Works Offline</div>
+          <div class="feature-desc">All data is stored locally in your browser. No sign-up, no cloud, no subscription — just open and start planning.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="how-label">How it works</div>
+    <h2 class="how-title">Up and running in seconds.</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <div class="step-title">Open the app</div>
+          <div class="step-desc">No sign-up. No install. Just open TaskFlow in any browser and you're ready to go. Your tasks are saved locally and persist between sessions.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <div class="step-title">Add your tasks</div>
+          <div class="step-desc">Click "Add Task" to create daily tasks, or switch to Monthly / Annual Goals for longer-term planning. Double-click any item to rename it.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <div class="step-title">Connect Google Calendar (optional)</div>
+          <div class="step-desc">Head to the Calendar tab and hit "Connect Google Calendar". Your events load alongside your tasks so everything lives in one place.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <div class="step-title">Stay on top of your day</div>
+          <div class="step-desc">Use the progress bar to see how much you've accomplished. Navigate forward and back through days, months, and years at a glance.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GOOGLE CALENDAR SECTION -->
+  <section class="gcal-section" id="calendar">
+    <div class="gcal-inner">
+      <div>
+        <div class="gcal-label">Google Calendar integration</div>
+        <h2 class="gcal-title">Your calendar, right where your tasks are.</h2>
+        <p class="gcal-desc">Stop switching between apps. TaskFlow's Calendar tab brings your Google Calendar events directly into your task view.</p>
+        <div class="gcal-bullets">
+          <div class="gcal-bullet">One-click Google sign-in to connect</div>
+          <div class="gcal-bullet">Events shown on the month grid and day view</div>
+          <div class="gcal-bullet">Color-coded by calendar</div>
+          <div class="gcal-bullet">Works alongside your local tasks</div>
+          <div class="gcal-bullet">Your data stays on Google's servers — we never store it</div>
+        </div>
+      </div>
+      <div class="gcal-visual">
+        <div class="gcal-visual-header">
+          <svg class="gcal-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="4" fill="white"/>
+            <rect x="2" y="6" width="28" height="24" rx="2" fill="white" stroke="#dadce0" stroke-width="1.5"/>
+            <rect x="2" y="6" width="28" height="8" fill="#4285f4" rx="2"/>
+            <rect x="2" y="10" width="28" height="4" fill="#4285f4"/>
+            <text x="16" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#4285f4" font-family="sans-serif">24</text>
+            <rect x="9" y="4" width="3" height="5" rx="1.5" fill="#757575"/>
+            <rect x="20" y="4" width="3" height="5" rx="1.5" fill="#757575"/>
+          </svg>
+          <div class="gcal-visual-title">Today's Events</div>
+        </div>
+        <div class="gcal-event-list">
+          <div class="gcal-event blue">
+            <div class="gcal-event-time">9:00 AM</div>
+            <div class="gcal-event-name">Team standup</div>
+          </div>
+          <div class="gcal-event green">
+            <div class="gcal-event-time">11:30 AM</div>
+            <div class="gcal-event-name">Product review</div>
+          </div>
+          <div class="gcal-event yellow">
+            <div class="gcal-event-time">2:00 PM</div>
+            <div class="gcal-event-name">1:1 with manager</div>
+          </div>
+          <div class="gcal-event red">
+            <div class="gcal-event-time">4:00 PM</div>
+            <div class="gcal-event-name">Sprint planning</div>
+          </div>
+        </div>
+        <button class="gcal-sync-btn">
+          <span>🔗</span> Connect Google Calendar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2 class="cta-title">Ready to <em>flow</em>?</h2>
+    <p class="cta-sub">Free, private, and works right in your browser.</p>
+    <div class="cta-actions">
+      <a href="To_Do.html" class="btn-primary">Open TaskFlow →</a>
+      <a href="#features" class="btn-outline">Learn more</a>
+    </div>
+  </section>
+
+  <footer>
+    <a href="index.html" class="footer-logo">Task<span>Flow</span></a>
+    <div class="footer-note">Small steps every day.</div>
+  </footer>
+
+</body>
+</html>
