@@ -6,7 +6,6 @@
   <title>TaskFlow — Your Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -409,22 +408,6 @@
       white-space: nowrap;
     }
 
-    .add-repeat {
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      font-family: var(--sans);
-      background: white;
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .repeat-badge {
-      font-size: 10px;
-      margin-left: 4px;
-    }
-
     /* ─── SYNC STATUS ─── */
     .sync-toast {
       position: fixed; bottom: 24px; right: 24px; z-index: 999;
@@ -655,9 +638,6 @@
     <div class="topbar-logo">Task<span>Flow</span></div>
     <div class="topbar-date" id="topbarDate"></div>
     <div class="topbar-gcal">
-      <button id="focusModeBtn" class="gcal-pill connect" style="background:var(--accent);color:white;">
-        ⏱️ Focus
-      </button>
       <button id="gcalConnectBtn" class="gcal-pill connect">
         📅 Connect Google Calendar
       </button>
@@ -729,11 +709,6 @@
         <div id="taskEmpty" class="empty-state" style="display:none;">No tasks yet — add one below ↓</div>
         <div class="add-form">
           <input class="add-input" id="taskInput" placeholder="New task… press Enter" />
-          <select class="add-repeat" id="taskRepeat">
-            <option value="">No repeat</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-          </select>
           <button class="add-btn" id="taskAddBtn">+ Add</button>
         </div>
         <div id="syncingRow" class="syncing-row" style="display:none;">
@@ -1008,12 +983,6 @@ function makeTaskItem(t, idx, date, tasks, context) {
   var txt = document.createElement("span");
   txt.className = "task-text" + (t.completed?" done":"");
   txt.textContent = t.text;
-  if (t.repeat) {
-    var badge = document.createElement("span");
-    badge.className = "repeat-badge";
-    badge.textContent = "🔁";
-    txt.appendChild(badge);
-  }
   // Double-click to rename
   txt.addEventListener("dblclick", function(){
     var newName = prompt("Rename task:", t.text);
@@ -1043,19 +1012,6 @@ function makeTaskItem(t, idx, date, tasks, context) {
     if (context==="tasks") { setTasksLocal(date, tasks); updateTaskCounter(tasks); }
     if (context==="monthly") { setMonthlyLocal(tasks); updateGoalCounter("monthly", tasks); }
     if (context==="annual") { setAnnualLocal(tasks); updateGoalCounter("annual", tasks); }
-    
-    // Handle recurring tasks - create next instance on completion
-    if (cb.checked && t.repeat && context==="tasks") {
-      var nextDate = new Date(date);
-      if (t.repeat === "daily") {
-        nextDate.setDate(nextDate.getDate() + 1);
-      } else if (t.repeat === "weekly") {
-        nextDate.setDate(nextDate.getDate() + 7);
-      }
-      var nextTasks = getTasksLocal(nextDate);
-      nextTasks.push({ text: t.text, completed: false, repeat: t.repeat, gcalEventId: "" });
-      setTasksLocal(nextDate, nextTasks);
-    }
   });
 
   li.appendChild(cb); li.appendChild(txt); li.appendChild(del);
@@ -1072,10 +1028,10 @@ function updateTaskCounter(tasks) {
   document.getElementById("taskPercent").textContent = pct + "%";
 }
 
-function addTask(text, date, repeat) {
+function addTask(text, date) {
   if (!text.trim()) return;
   var tasks = getTasksLocal(date);
-  var task = { text: text.trim(), completed: false, repeat: repeat || "", gcalEventId: "" };
+  var task = { text: text.trim(), completed: false, gcalEventId: "" };
   var idx = tasks.length;
   tasks.push(task);
   setTasksLocal(date, tasks);
@@ -1091,23 +1047,20 @@ function addTask(text, date, repeat) {
         var t2 = getTasksLocal(date);
         if (t2[idx] !== undefined) { t2[idx].gcalEventId = id; setTasksLocal(date, t2); }
         if (isSame(date, currentDate)) renderTasks();
+        // refresh GCal events display
         fetchGcalEvents();
       }
-    });
-  }
-}
     });
   }
 }
 
 // Task input events
 var taskInput = document.getElementById("taskInput");
-var taskRepeat = document.getElementById("taskRepeat");
 taskInput.addEventListener("keydown", function(e){
-  if (e.key==="Enter") { addTask(taskInput.value, currentDate, taskRepeat.value); taskInput.value=""; taskRepeat.value=""; }
+  if (e.key==="Enter") { addTask(taskInput.value, currentDate); taskInput.value=""; }
 });
 document.getElementById("taskAddBtn").addEventListener("click", function(){
-  addTask(taskInput.value, currentDate, taskRepeat.value); taskInput.value=""; taskRepeat.value="";
+  addTask(taskInput.value, currentDate); taskInput.value="";
 });
 
 // Date navigation
@@ -1392,190 +1345,6 @@ window.addEventListener("load", initGoogleAPI);
 
 // Auto-refresh GCal every 5 min if connected
 setInterval(function(){ if(gcalConnected) fetchGcalEvents(); }, 5*60*1000);
-
-// ─── FOCUS MODE (STOPWATCH) ─────────────────
-(function() {
-  var focusModal = document.createElement('div');
-  focusModal.id = 'focusModal';
-  focusModal.className = 'focus-modal';
-  focusModal.innerHTML = 
-    '<div class="focus-overlay" id="focusOverlay"></div>' +
-    '<div class="focus-container">' +
-      '<button class="focus-close" id="focusClose">&times;</button>' +
-      '<div class="focus-label">FOCUS MODE</div>' +
-      '<div class="focus-icon">⏱️</div>' +
-      '<div class="focus-time" id="focusTime">00:00:00</div>' +
-      '<div class="focus-btns">' +
-        '<button class="focus-btn primary" id="focusStart">START</button>' +
-        '<button class="focus-btn" id="focusStop">STOP</button>' +
-        '<button class="focus-btn" id="focusReset">RESET</button>' +
-      '</div>' +
-    '</div>';
-  document.body.appendChild(focusModal);
-
-  var focusState = { elapsed: 0, interval: null, running: false };
-  
-  function formatTime(sec) {
-    var h = Math.floor(sec/3600);
-    var m = Math.floor((sec%3600)/60);
-    var s = sec%60;
-    return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0') + ':' + s.toString().padStart(2,'0');
-  }
-
-  document.getElementById('focusModeBtn').addEventListener('click', function() {
-    focusModal.style.display = 'flex';
-  });
-
-  document.getElementById('focusClose').addEventListener('click', function() {
-    focusModal.style.display = 'none';
-  });
-
-  document.getElementById('focusOverlay').addEventListener('click', function() {
-    focusModal.style.display = 'none';
-  });
-
-  document.getElementById('focusStart').addEventListener('click', function() {
-    if (!focusState.running) {
-      focusState.running = true;
-      focusState.interval = setInterval(function() {
-        focusState.elapsed++;
-        document.getElementById('focusTime').textContent = formatTime(focusState.elapsed);
-      }, 1000);
-    }
-  });
-
-  document.getElementById('focusStop').addEventListener('click', function() {
-    if (focusState.running) {
-      focusState.running = false;
-      clearInterval(focusState.interval);
-    }
-  });
-
-  document.getElementById('focusReset').addEventListener('click', function() {
-    focusState.running = false;
-    clearInterval(focusState.interval);
-    focusState.elapsed = 0;
-    document.getElementById('focusTime').textContent = '00:00:00';
-  });
-})();
-
-// ─── POMODORO TIMER ─────────────────────────────
-(function() {
-  var DURATIONS = { work: 30*60, shortBreak: 5*60, longBreak: 15*60 };
-  var state = {
-    remaining: DURATIONS.work,
-    running: false,
-    session: 1,
-    type: 'work',
-    interval: null
-  };
-
-  function formatTime(s) {
-    return Math.floor(s/60).toString().padStart(2,'0') + ':' + (s%60).toString().padStart(2,'0');
-  }
-
-  function playBeep() {
-    try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      var osc = ctx.createOscillator();
-      var gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 800;
-      gain.gain.value = 0.3;
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    } catch(e) {}
-  }
-
-  var widget = document.createElement('div');
-  widget.className = 'pomo-widget';
-  widget.innerHTML = 
-    '<div class="pomo-btn-circle" id="pomoCircle">30:00</div>' +
-    '<div class="pomo-panel" id="pomoPanel" style="display:none;">' +
-      '<div class="pomo-label">Pomodoro Timer</div>' +
-      '<div class="pomo-time" id="pomoTime">30:00</div>' +
-      '<div class="pomo-info">Session ' + state.session + '/4</div>' +
-      '<div class="pomo-info pomo-type" id="pomoType">work</div>' +
-      '<div class="pomo-controls">' +
-        '<button id="pomoStart" class="pomo-action">Start</button>' +
-        '<button id="pomoReset" class="pomo-action">Reset</button>' +
-        '<button id="pomoSkip" class="pomo-action">Skip</button>' +
-      '</div>' +
-    '</div>';
-  document.body.appendChild(widget);
-
-  var circle = document.getElementById('pomoCircle');
-  var panel = document.getElementById('pomoPanel');
-  var timeEl = document.getElementById('pomoTime');
-  var infoEl = panel.querySelector('.pomo-info');
-  var typeEl = document.getElementById('pomoType');
-  var startBtn = document.getElementById('pomoStart');
-
-  function updateUI() {
-    circle.textContent = formatTime(state.remaining);
-    timeEl.textContent = formatTime(state.remaining);
-    infoEl.textContent = 'Session ' + state.session + '/4';
-    typeEl.textContent = state.type;
-    startBtn.textContent = state.running ? 'Pause' : 'Start';
-  }
-
-  function next() {
-    if (state.type === 'work') {
-      state.type = (state.session >= 4) ? 'longBreak' : 'shortBreak';
-      state.remaining = (state.session >= 4) ? DURATIONS.longBreak : DURATIONS.shortBreak;
-    } else {
-      state.type = 'work';
-      state.remaining = DURATIONS.work;
-      state.session = (state.type === 'longBreak') ? 1 : state.session + 1;
-    }
-    state.running = false;
-    playBeep();
-    updateUI();
-  }
-
-  function tick() {
-    state.remaining--;
-    if (state.remaining < 0) {
-      clearInterval(state.interval);
-      state.running = false;
-      next();
-    } else {
-      updateUI();
-    }
-  }
-
-  startBtn.addEventListener('click', function() {
-    if (state.running) {
-      clearInterval(state.interval);
-      state.running = false;
-    } else {
-      state.running = true;
-      state.interval = setInterval(tick, 1000);
-    }
-    updateUI();
-  });
-
-  document.getElementById('pomoReset').addEventListener('click', function() {
-    clearInterval(state.interval);
-    state.running = false;
-    state.remaining = DURATIONS.work;
-    state.type = 'work';
-    updateUI();
-  });
-
-  document.getElementById('pomoSkip').addEventListener('click', function() {
-    clearInterval(state.interval);
-    state.running = false;
-    next();
-  });
-
-  circle.addEventListener('click', function() {
-    panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
-  });
-
-  updateUI();
-})();
 </script>
 </body>
 </html>
