@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<div id="test">Click me</div>
+<script>
+document.getElementById('test').addEventListener('click', function() {
+  alert('Working!');
+});
+console.log('Script loaded');
+</script>
+</body>
+</html>

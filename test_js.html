@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>JS Test</title></head>
+<body>
+<h1>Test Page</h1>
+<p>Click button to test JS:</p>
+<button id="btn">Click Me</button>
+<p id="result">Not clicked</p>
+<script>
+document.getElementById('btn').addEventListener('click', function() {
+    document.getElementById('result').textContent = 'JS WORKS! Clicked at ' + new Date();
+});
+console.log('Script loaded successfully');
+</script>
+</body>
+</html>
