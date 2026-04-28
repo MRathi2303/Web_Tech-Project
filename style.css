@@ -714,6 +714,106 @@ body {
 .pomo-action:first-child:hover {
   background: #d44d20;
 }
+
+/* ── FOCUS MODE ── */
+.focus-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+
+.focus-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(26, 26, 46, 0.95);
+}
+
+.focus-container {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 50px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.focus-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #8a8a9a;
+  cursor: pointer;
+}
+
+.focus-close:hover {
+  color: #1a1a2e;
+}
+
+.focus-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #8a8a9a;
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.focus-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.focus-time {
+  font-size: 64px;
+  font-weight: 700;
+  color: #1a1a2e;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 40px;
+}
+
+.focus-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.focus-btn {
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #e0ddd6;
+  background: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  color: #1a1a2e;
+}
+
+.focus-btn:hover {
+  background: #f3efe7;
+}
+
+.focus-btn.primary {
+  background: #e8572a;
+  color: white;
+  border-color: #e8572a;
+}
+
+.focus-btn.primary:hover {
+  background: #d44d20;
+}
   margin-bottom: 4px;
 }
 
