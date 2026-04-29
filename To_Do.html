@@ -644,10 +644,6 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(232,87,42,0.3);
     }
-    .focus-toggle::before {
-      content: '🎯';
-      font-size: 16px;
-    }
     .focus-overlay {
       display: none; position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -705,16 +701,15 @@
       box-shadow: 0 6px 24px rgba(232,87,42,0.5), 0 2px 8px rgba(0,0,0,0.2);
       display: flex; align-items: center; justify-content: center;
       transition: all .25s ease;
-      font-size: 36px;
+    }
+    .pomo-float-btn::before {
+      content: '🍅';
+      font-size: 32px;
+      line-height: 1;
     }
     .pomo-float-btn:hover {
       transform: scale(1.12) rotate(5deg);
       box-shadow: 0 10px 32px rgba(232,87,42,0.6), 0 4px 12px rgba(0,0,0,0.25);
-    }
-    .pomo-float-btn::before {
-      content: '🍅';
-      font-size: 34px;
-      line-height: 1;
     }
     .pomo-float-dropdown {
       position: absolute; bottom: 70px; right: 0; background: var(--surface);
