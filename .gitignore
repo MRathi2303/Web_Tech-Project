@@ -1,3 +1,4 @@
 # Never commit credentials
 .env
 .vercel
+config.js
